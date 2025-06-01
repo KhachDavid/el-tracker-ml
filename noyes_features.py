@@ -2,9 +2,10 @@ import pickle
 import pandas as pd
 from datetime import datetime
 from collections import deque
+from datetime import timedelta
 
 # Load noyes data from pickle file
-noyes_pickle_file = 'cta_train_noyes_actual.pkl'
+noyes_pickle_file = 'pickled_data/cta_train_noyes_actual.pkl'
 with open(noyes_pickle_file, 'rb') as f:
     noyes_data = pickle.load(f)
 print("Loaded noyes data from pickle file.")
@@ -69,41 +70,41 @@ for etas, snap_ts in noyes_data:
             if key in seen_live:
                 continue
             seen_live.add(key)
+            
+            for i, sched in enumerate(sched_queue[direction]):
+                if sched["run_number"] != eta["run_number"]:
+                    continue  # wrong train, skip
 
-            while sched_queue[direction]:
-                sched = sched_queue[direction][0]  # peek oldest scheduled
                 delay_min = (snap_ts - sched["scheduled_arr"]).total_seconds() / 60.0
                 error_min = (arrival_time - sched["scheduled_arr"]).total_seconds() / 60.0
+
                 if delay_min < 0:
-                    break  # live train is earlier than scheduled ETA – skip matching now
-
+                    continue  # live train is before this scheduled ETA → skip
+                
                 if error_min > MAX_RELEVANT_MIN:
-                    # too stale → discard
-                    stale = sched_queue[direction].popleft()
-                    missed_scheduled.append({
-                        "direction": direction,
-                        "scheduled_arr": sched["scheduled_arr"],
-                        "first_seen": sched["first_seen"],
-                        "delay_min": delay_min,
-                    })
-                    print(f"Discarding stale scheduled ETA: {stale} due to delay {delay_min} min")
-                    continue
+                    continue  # scheduled ETA too old for this live arrival
+                
+                # Accept this match
+                minutes = eta.get("minutes_until_arrival", 0)
+                actual_arr = snap_ts + timedelta(minutes=minutes)
 
-                # Match is acceptable
-                sched_queue[direction].popleft()
                 matches.append({
                     "direction": direction,
                     "scheduled_arr": sched["scheduled_arr"],
-                    "actual_arr": arrival_time,
+                    "actual_arr": actual_arr,
                     "first_seen": sched["first_seen"],
                     "delay_min": delay_min,
+                    "run_number": eta["run_number"],
                 })
-                break  # stop once matched
+
+                # Remove from queue
+                del sched_queue[direction][i]
+                break
 
 
 df_match = pd.DataFrame(matches)
 df_match["error_min"] = (df_match["actual_arr"] - df_match["scheduled_arr"]).dt.total_seconds() / 60.0
-print(df_match[["direction", "scheduled_arr", "actual_arr", "error_min"]].head())
+print(df_match[["direction", "run_number", "scheduled_arr", "actual_arr", "error_min"]].head())
 # save the DataFrame to a csv file
-output_file = 'matches/noyes_actual_matches.csv'
+output_file = 'matches/noyes_actual_matches_arrival_new.csv'
 df_match.to_csv(output_file, index=False)
