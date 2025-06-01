@@ -1,0 +1,22 @@
+body {
+    font-family: sans-serif;
+    margin: 40px;
+}
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+.nav {
+    margin-top: 30px;
+}
+.nav a {
+    margin: 0 10px;
+    text-decoration: none;
+}
+
+.time-form {
+    margin: 20px 0;
+}
+.time-form input {
+    padding: 4px;
+}

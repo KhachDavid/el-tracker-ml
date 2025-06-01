@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Noyes ETA Replay</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h2>Noyes Station ETA Snapshot, {{ snapshot.snap_date }}</h2>
+    <h4>{{ snapshot.snap_time }}</h4>
+
+    {% for direction in ["Howard", "Linden"] %}
+        <h3>{{ direction }} Bound</h3>
+        <ul>
+        {% for eta in snapshot[direction] %}
+            <li>{{ eta.minutes }} min | {{ eta.type }} | {{eta.run_number}} </li>
+        {% else %}
+            <li>No trains</li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <div class="nav">
+        {% if index > 0 %}
+            <a href="/?i={{ index - 1 }}">⟵ Prev</a>
+        {% endif %}
+        <span>{{ index + 1 }} / {{ total }}</span>
+        {% if index + 1 < total %}
+            <a href="/?i={{ index + 1 }}">Next ⟶</a>
+        {% endif %}
+    </div>
+    <form action="/" method="get" class="time-form">
+        <label for="ts">Jump to Time:</label>
+        <input type="datetime-local" name="ts" id="ts" required>
+        <button type="submit">Go</button>
+    </form>    
+</body>
+</html>

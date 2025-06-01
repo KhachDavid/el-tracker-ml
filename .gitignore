@@ -1,1 +1,5 @@
 __pycache__/
+actual_data/
+train_stops.sh
+RUN
+*pkl

@@ -38,6 +38,17 @@ class CTATrainDataParser:
             data_string = f.read()
         
         return self.parse_data_string(data_string)
+    
+    def parse_pickled_data(self, data):
+        """
+        Parse CTA data from a pickled object
+        """
+        if isinstance(data, str):
+            data_string = data
+        else:
+            data_string = data.decode('utf-8')
+        
+        return self.parse_data_string(data_string)
         
     def _parse_line(self, line):
         """
