@@ -9,12 +9,12 @@ data_parser = CTATrainDataParser()
 
 # check if pickle file already exists
 # Read all files inside sample_data directory
-files = os.listdir('sample_data')
+files = os.listdir('holdout_data')
 days = {}
 for file in files:
     print("Parsing file:", file)
     if file.endswith('.csv'):
-        file_path = os.path.join('sample_data', file)
+        file_path = os.path.join('holdout_data', file)
         this_day = data_parser.parse_file(file_path)
         # Store the data for each day
         days[file] = this_day
@@ -43,7 +43,7 @@ for day, data in days.items():
     for rec in data:
         snap_ts = rec["timestamp"].replace(tzinfo=None)
 
-        if rec["station_id"] != "41250":
+        if rec["station_id"] != "40400":
             continue
 
         noyes_rows.append((rec["eta_entries"], snap_ts))
@@ -58,7 +58,7 @@ print("Number of noyes rows:", len(noyes_rows))
 #    pickle.dump(rows, f)
 #print(f"Data saved to {pickle_file}")
 # Save the noyes_rows to a pickle file
-noyes_pickle_file = 'cta_train_central.pkl'
+noyes_pickle_file = 'noyes_holdout.pkl'
 with open(noyes_pickle_file, 'wb') as f:
     pickle.dump(noyes_rows, f)
 print(f"Noyes data saved to {noyes_pickle_file}")

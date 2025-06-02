@@ -1,0 +1,2 @@
+direction,scheduled_arr,actual_arr,first_seen,delay_min,run_number,opp_dir_live_arrivals,error_min
+Linden,2025-05-30 20:53:43,2025-05-30 20:55:02,2025-05-30 20:40:00.835236,0.5332907333333333,521,[],1.3166666666666667

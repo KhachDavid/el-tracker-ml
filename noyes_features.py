@@ -5,7 +5,7 @@ from collections import deque
 from datetime import timedelta
 
 # Load noyes data from pickle file
-noyes_pickle_file = 'pickled_data/cta_train_noyes_actual.pkl'
+noyes_pickle_file = 'noyes_holdout.pkl'
 with open(noyes_pickle_file, 'rb') as f:
     noyes_data = pickle.load(f)
 print("Loaded noyes data from pickle file.")
@@ -125,5 +125,5 @@ df_match = pd.DataFrame(matches)
 df_match["error_min"] = (df_match["actual_arr"] - df_match["scheduled_arr"]).dt.total_seconds() / 60.0
 print(df_match[["direction", "run_number", "scheduled_arr", "actual_arr", "error_min"]].head())
 # save the DataFrame to a csv file
-output_file = 'matches/noyes_actual_matches_arrival_new.csv'
+output_file = 'matches/noyes_holdout.csv'
 df_match.to_csv(output_file, index=False)
