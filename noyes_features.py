@@ -12,6 +12,11 @@ print("Loaded noyes data from pickle file.")
 
 print(len(noyes_data), "snapshots loaded from pickle file.")
 
+snapshot_lookup = {}
+for etas, snap_ts in noyes_data:
+    snapshot_lookup[snap_ts] = etas  # we’ll use this later to get opposite direction live trains
+
+
 seen_live = set()   # (pred_arr, direction) to avoid rematching same live ETA
 seen_sched = set()  # (sched_arr, direction) to avoid rematching same scheduled ETA
 sched_queue = {
@@ -21,6 +26,7 @@ sched_queue = {
 matches = []
 missed_scheduled = []
 MAX_RELEVANT_MIN = 10.0  # or maybe 20.0 depending on tolerance
+MIN_RELEVANT_MIN = 1.0  # minimum delay to consider a match
 current_day = None  # to track the current day of snapshots
 
 for etas, snap_ts in noyes_data:
@@ -84,9 +90,21 @@ for etas, snap_ts in noyes_data:
                 if error_min > MAX_RELEVANT_MIN:
                     continue  # scheduled ETA too old for this live arrival
                 
+                if error_min < MIN_RELEVANT_MIN:
+                    continue
                 # Accept this match
                 minutes = eta.get("minutes_until_arrival", 0)
                 actual_arr = snap_ts + timedelta(minutes=minutes)
+                
+                # Find opposite direction live trains at first_seen
+                opposite = "Linden" if sched["direction"] == "Howard" else "Howard"
+                opp_etas = snapshot_lookup.get(sched["first_seen"], [])
+                opp_live_arrivals = []
+                for opp_eta in opp_etas:
+                    if (not opp_eta.get("is_scheduled")) and (opposite in opp_eta.get("stop_description", "")):
+                        if opp_eta.get("arrival_time"):
+                            mins = (opp_eta["arrival_time"] - sched["first_seen"]).total_seconds() / 60.0
+                            opp_live_arrivals.append(round(mins, 2))
 
                 matches.append({
                     "direction": direction,
@@ -95,6 +113,7 @@ for etas, snap_ts in noyes_data:
                     "first_seen": sched["first_seen"],
                     "delay_min": delay_min,
                     "run_number": eta["run_number"],
+                    "opp_dir_live_arrivals": opp_live_arrivals,
                 })
 
                 # Remove from queue
